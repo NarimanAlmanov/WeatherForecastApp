@@ -243,6 +243,7 @@ class WeatherDB:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute("DELETE FROM weather_info_table")
+        conn.commit()
         cursor.execute("VACUUM")
         conn.commit()
         conn.close()
