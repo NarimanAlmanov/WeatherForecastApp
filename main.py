@@ -6,10 +6,9 @@ from datetime import datetime, timedelta
 
 """This class is responsible for making requests to API of Open Weather Map and returning responses"""
 class WeatherApi:
-    def __init__(self, api_key, city, db_path="weather_data.db"):
+    def __init__(self, api_key, city):
         self.api_key = api_key
         self.city = city
-        self.db_path = db_path
 
     def querry_weather(self):
         url = "https://api.openweathermap.org/data/2.5/forecast"
