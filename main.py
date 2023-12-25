@@ -83,19 +83,25 @@ class WeatherApp:
                 self.print_weather_info_list(weather_info_list)
                 return weather_info_list
         else:
-            forecast = self.weather_db.read_from_db(1)
-            time_date = datetime.strptime(forecast[1], "%Y-%m-%d %H:%M:%S")
-            if datetime.utcnow() > time_date:
-                weather_info_list = self.create_weather_info_list_from_api(self.weather_api.querry_weather())
-                """If API returns error"""
-                if weather_info_list == []:
-                    return
+            try:
+                forecast = self.weather_db.read_from_db(1)
+                time_date = datetime.strptime(forecast[1], "%Y-%m-%d %H:%M:%S")
+                if datetime.utcnow() > time_date:
+                    weather_info_list = self.create_weather_info_list_from_api(self.weather_api.querry_weather())
+                    """If API returns error"""
+                    if weather_info_list == []:
+                        return
+                    else:
+                        self.weather_db.clear_db()
+                        self.weather_db.write_to_db(weather_info_list)
+                        self.print_weather_info_list(weather_info_list)
                 else:
-                    self.weather_db.clear_db()
-                    self.weather_db.write_to_db(weather_info_list)
+                    weather_info_list = self.create_weather_info_list_from_db(self.weather_db)
                     self.print_weather_info_list(weather_info_list)
-            else:
-                weather_info_list = self.create_weather_info_list_from_db(self.weather_db)
+            except:
+                """If database was corrupted"""
+                self.weather_db.recreate_db()
+                self.weather_db.write_to_db(weather_info_list)
                 self.print_weather_info_list(weather_info_list)
             return weather_info_list
 
@@ -168,7 +174,17 @@ class WeatherDB:
             self._create_database()
         
         """Check if empty"""
-        self.check_if_empty()
+        try:
+            self.check_if_empty()
+        except:
+            """Database is corrupted"""
+            self.recreate_db()
+            self.empty = True
+            print("Error: Database has been corrupted. Recreating database")
+
+    def recreate_db(self):
+        os.remove(self.db_path)
+        self._create_database()
 
     def check_if_empty(self):
         conn = sqlite3.connect(self.db_path)
